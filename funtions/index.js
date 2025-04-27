@@ -3,7 +3,6 @@ const config = require('../config')
 const moment = require('moment-timezone');
 const { MongoClient } = require('mongodb');
 
-
 module.exports.dateNow = () => {
     try {
         return moment().tz('Asia/Bangkok').format('YYYY-MM-DDTHH:mm:ss.SSS');
@@ -14,7 +13,14 @@ module.exports.dateNow = () => {
 
 module.exports.connectMongoDB = async () => {
     try {
-        const client = new MongoClient(config.dbSettings.host);
+        const client = new MongoClient(config.dbSettings.host, {
+            auth: {
+                username: config.dbSettings.username,
+                password: config.dbSettings.password,
+            },
+            authSource: config.dbSettings.database,
+        });
+
         await client.connect();
         const db = client.db(config.dbSettings.database);
         return { client, db };
@@ -68,10 +74,10 @@ module.exports.publishCmd = async (req) => {
         const user_db = data[0].user;
         const pass_db = data[0].password;
 
-        const client = mqtt.connect(`mqtt://localhost:${config.serverSettings.mqttPort}`,{
+        const client = mqtt.connect(`mqtt://localhost:${config.serverSettings.mqttPort}`, {
             username: user_db,
             password: pass_db,
-          })
+        })
         client.on('connect', () => {
             client.publish(topic, message)
             client.end();
@@ -80,3 +86,22 @@ module.exports.publishCmd = async (req) => {
         console.log(`${module.exports.dateNow()} : [Error] : ${err}`);
     }
 }
+
+async function connectMongoDB() {
+    try {
+        const client = new MongoClient(config.dbSettings.host, {
+            auth: {
+                username: config.dbSettings.username,
+                password: config.dbSettings.password,
+            },
+            authSource: config.dbSettings.database,
+        });
+
+        await client.connect();
+        global.db = client.db(config.dbSettings.database);
+    } catch (error) {
+        console.log(`${module.exports.dateNow()} : [Error] : ${err}`);
+    }
+}
+
+connectMongoDB();

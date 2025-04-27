@@ -1,6 +1,6 @@
 
 module.exports = {
-    name: 'S63 PROJECT',
+    name: 'PTRACING',
     version: '1.0.0',
     env: 'production',
     serverSettings: {
@@ -9,10 +9,10 @@ module.exports = {
         socketPort: 4000
     },
     dbSettings: {
-        user: 'admin',
-        host: 'mongodb://localhost:27017',
-        database: 'S63DB',
-        password: 'GCb7JA+W6Hg?4=Vf',
+        username : "s63",
+        password : "063063",
+        host: 'mongodb://username:password@localhost:27017',
+        database: 'PTRACINGDB',
         port: 27017,
     },
 }

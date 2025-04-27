@@ -1,4 +1,6 @@
-const mosca = require('mosca');
+const mqttBroker = require("aedes")();
+const net = require("net");
+const { createServer } = require("aedes-server-factory");
 const express = require('express');
 const expressWs = require('express-ws');
 const bodyParser = require('body-parser');
@@ -11,24 +13,26 @@ apiServer.use(bodyParser.json());
 apiServer.use(express.urlencoded({ extended: true }));
 
 //mqtt
-const moscaSettings = { port: config.serverSettings.mqttPort };
-const mqttBroker = new mosca.Server(moscaSettings);
+const mqttServer = createServer(mqttBroker);
 mqttBroker.authenticate = async (client, username, password, callback) => {
-  try {
-    const { db } = await connectMongoDB();
-    const collection = await db.collection("users");
-    const data = await collection.find({ "user": username }).toArray();
-    const user_db = data[0].user;
-    const pass_db = data[0].password;
-    const authorized = (username === user_db && password.toString() === pass_db);
-    if (authorized) {
-      client.user = username;
+    try {
+        const { db } = await connectMongoDB();
+        const collection = await db.collection("users");
+        const data = await collection.find({ "user": username }).toArray();
+        const user_db = data[0].user;
+        const pass_db = data[0].password;
+        const authorized = (username === user_db && password.toString() === pass_db);
+        if (authorized) {
+            client.user = username;
+        }
+        callback(null, authorized);
+    } catch (error) {
+        callback(null, false);
     }
-    callback(null, authorized);
-  } catch (error) {
-    callback(null, false);
-  }
 };
+mqttServer.listen(config.serverSettings.mqttPort, () => {
+    console.log(`${dateNow()} : [Info] : MQTT Broker is running on port ${config.serverSettings.mqttPort}`);
+});
 
 //web-sockt
 expressWs(apiServer);
@@ -58,11 +62,12 @@ apiServer.ws('/:carId', (ws, req) => {
     });
 });
 
-console.log(`${dateNow()} : [Info] : S63 Server running ...`);
+console.log(`${dateNow()} : [Info] : ${config.name} sevice started ...`);
 apiServer.listen(config.serverSettings.apiPort, () => {
-  console.log(`${dateNow()} : [Info] : HTTP API is running on port ${config.serverSettings.apiPort}`);
-  console.log(`${dateNow()} : [Info] : WebSocket is running on port ${config.serverSettings.socketPort}`);
+    console.log(`${dateNow()} : [Info] : HTTP API is running on port ${config.serverSettings.apiPort}`);
+    console.log(`${dateNow()} : [Info] : WebSocket is running on port ${config.serverSettings.socketPort}`);
 });
 
 require('./routes/index.js')(apiServer, mqttBroker)
 exports.clients = clients;
+

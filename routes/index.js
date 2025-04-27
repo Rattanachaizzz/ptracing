@@ -1,7 +1,7 @@
 const api = require('../controllers/api.js');
 const mqtt = require('../controllers/mqtt.js');
 
-module.exports = (apiServer, mqttBroker, wss) => {
+module.exports = (apiServer, mqttBroker) => {
     //API Routes
     apiServer.post('/UpdateConfig', api.UpdateConfig);
     apiServer.delete('/CalibateGforce', api.CalibateGforce);
@@ -11,8 +11,13 @@ module.exports = (apiServer, mqttBroker, wss) => {
     apiServer.post('/GetAllCar', api.GetAllCar);
 
     //MQTT Routes
-    mqttBroker.on('ready', mqtt.Ready);
-    mqttBroker.on('clientConnected', mqtt.Connected);
-    mqttBroker.on('clientDisconnected', mqtt.Disconnected);
-    mqttBroker.on('published', mqtt.Published);
+    // mqttBroker.on('ready', mqtt.Ready);
+    // mqttBroker.on('clientConnected', mqtt.Connected);
+    // mqttBroker.on('clientDisconnected', mqtt.Disconnected);
+    // mqttBroker.on('published', mqtt.Published);
+
+    mqttBroker.on('client', mqtt.Connected);
+    mqttBroker.on('clientDisconnect', mqtt.Disconnected);
+    mqttBroker.on('publish', mqtt.Published);
 };
+
